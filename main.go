@@ -20,6 +20,14 @@ type Users struct {
 var db *gorm.DB
 
 func main() {
+
+	db, err := gorm.Open(sqlite.Open("pilavli.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	db.AutoMigrate(&Users{})
+
 	discord, err := discordgo.New("Bot " + os.Getenv("TOKEN"))
 	if err != nil {
 		log.Fatal(err)
@@ -34,13 +42,6 @@ func main() {
 		fmt.Println("error opening connection,", err)
 		return
 	}
-
-	db, err = gorm.Open(sqlite.Open("pilavli.db"), &gorm.Config{})
-	if err != nil {
-		panic("failed to connect database")
-	}
-
-	db.AutoMigrate(&Users{})
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
@@ -69,6 +70,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			if err != nil {
 				fmt.Println(err)
 				s.ChannelMessageSendReply(m.ChannelID, "DM'in kapali oldugu icin bildirimler acilamadi. DM'i acip tekrar !bilgilendir yazabilirsin.", &discordgo.MessageReference{MessageID: m.Message.ID, ChannelID: m.ChannelID, GuildID: m.GuildID})
+
 				return
 			} else {
 				db.Create(&Users{UserID: m.Author.ID})
